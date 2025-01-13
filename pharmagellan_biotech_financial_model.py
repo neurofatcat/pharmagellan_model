@@ -29,26 +29,9 @@ def fetch_stock_data(ticker_symbol: str) -> dict:
         shares_outstanding = info.get("sharesOutstanding", None)
         summary = info.get("longBusinessSummary", "No summary available.")
 
-        # Balance sheet details
-        balance_sheet = stock.balance_sheet
-        total_assets = 0
-        total_liabilities = 0
-        common_equity = 0
-        
-        if not balance_sheet.empty:
-            if "Total Assets" in balance_sheet.index:
-                total_assets = balance_sheet.loc["Total Assets"].max()
-            if "Total Liabilities Net Minority Interest" in balance_sheet.index:
-                total_liabilities = balance_sheet.loc["Total Liabilities Net Minority Interest"].max()
-            if "Common Stock Equity" in balance_sheet.index:
-                common_equity = balance_sheet.loc["Common Stock Equity"].max()
-
         return {
             "market_cap": market_cap,
             "shares_outstanding": shares_outstanding,
-            "total_assets": total_assets,
-            "total_liabilities": total_liabilities,
-            "common_equity": common_equity,
             "summary": summary
         }
     except Exception as e:
@@ -129,20 +112,17 @@ def main():
             st.error(stock_data["error"])
             return
 
-        st.subheader("Company Overview")
+        st.markdown("## **Company Overview**")
         st.write(stock_data.get("summary", "No company summary available."))
 
-        st.subheader("Balance Sheet Highlights")
+        st.markdown("## **Balance Sheet Highlights**")
         st.write(f"Market Cap: ${stock_data['market_cap']:,}" if stock_data['market_cap'] else "Market Cap: N/A")
-        st.write(f"Total Assets: ${stock_data['total_assets']:,}" if stock_data['total_assets'] else "Total Assets: N/A")
-        st.write(f"Total Liabilities: ${stock_data['total_liabilities']:,}" if stock_data['total_liabilities'] else "Total Liabilities: N/A")
-        st.write(f"Common Equity: ${stock_data['common_equity']:,}" if stock_data['common_equity'] else "Common Equity: N/A")
         st.write(f"Shares Outstanding: {stock_data['shares_outstanding']:,}" if stock_data['shares_outstanding'] else "Shares Outstanding: N/A")
 
         st.subheader("Pipeline Inputs")
-        num_assets = st.number_input("Number of Pipeline Assets:", min_value=1, max_value=10, value=1)
+        num_assets = st.number_input("Number of Pipeline Assets:", min_value=1, max_value=10, value=1, step=1)
 
-         pipeline_cash_flows = []
+        pipeline_cash_flows = []
         for i in range(num_assets):
             st.write(f"**Pipeline Asset {i+1}**")
             phase = st.selectbox(
