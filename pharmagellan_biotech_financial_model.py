@@ -1,7 +1,6 @@
 import numpy as np
 import yfinance as yf
 import streamlit as st
-import pandas as pd
 
 # --------------------------------------
 #          CONFIGURATIONS
@@ -159,8 +158,104 @@ def main():
 
         pipeline_cash_flows = []
         for i in range(num_assets):
-            # Existing pipeline input code...
-            pass
+            st.write(f"**Pipeline Asset {i+1}**")
+
+            rare_disease = st.radio(
+                f"Is Asset {i+1} a Rare Disease?",
+                options=["Yes", "No"],
+                index=1,
+                key=f"rare_{i}",
+                help="Indicate if the disease is classified as rare."
+            )
+
+            probabilities = RARE_DISEASE_PHASE_PROBABILITIES if rare_disease == "Yes" else PHASE_PROBABILITIES
+
+            phase = st.selectbox(
+                f"Select Phase for Asset {i+1}:",
+                options=list(probabilities.keys()),
+                key=f"phase_{i}",
+                help="Select the current phase of clinical trials for this asset."
+            )
+            phase_probability = probabilities[phase]
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                eligible_population = st.number_input(
+                    f"Eligible Patient Population for Asset {i+1}:",
+                    min_value=0,
+                    value=0,
+                    key=f"pop_{i}",
+                    help="The estimated number of patients who could benefit from this treatment."
+                )
+
+                market_penetration_rate = st.slider(
+                    f"Market Penetration Rate for Asset {i+1} (%):",
+                    min_value=0,
+                    max_value=100,
+                    value=50,
+                    key=f"penetration_{i}",
+                    help="Percentage of the eligible population expected to use this treatment."
+                )
+
+                price_per_patient = st.number_input(
+                    f"Price per Patient for Asset {i+1} (USD):",
+                    min_value=0.0,
+                    value=100000.0,
+                    key=f"price_{i}",
+                    help="Treatment price per patient."
+                )
+
+            with col2:
+                ramp_years = st.slider(
+                    f"Years to Reach Peak Revenue for Asset {i+1}:",
+                    min_value=1,
+                    max_value=10,
+                    value=5,
+                    key=f"ramp_{i}",
+                    help="Time needed to achieve peak sales."
+                )
+
+                peak_years = st.slider(
+                    f"Years at Peak Revenue for Asset {i+1}:",
+                    min_value=1,
+                    max_value=10,
+                    value=5,
+                    key=f"peak_{i}",
+                    help="Duration of peak revenue."
+                )
+
+                decline_years = st.slider(
+                    f"Years of Revenue Decline for Asset {i+1}:",
+                    min_value=1,
+                    max_value=20,
+                    value=10,
+                    key=f"decline_{i}",
+                    help="Number of years revenue decreases after peak."
+                )
+
+                decline_rate = st.slider(
+                    f"Annual Decline Rate for Asset {i+1} (%):",
+                    min_value=0.0,
+                    max_value=1.0,
+                    value=0.1,
+                    key=f"decline_rate_{i}",
+                    help="Rate at which revenue declines annually after peak."
+                )
+
+            cash_flows = simulate_pipeline_cash_flows(
+                eligible_population=eligible_population,
+                price_per_patient=price_per_patient,
+                market_penetration=market_penetration_rate,
+                delay_years=0,  # No delay assumed in this simplified version
+                ramp_years=ramp_years,
+                peak_years=peak_years,
+                decline_years=decline_years,
+                decline_rate=decline_rate
+            )
+
+            risk_adjusted_cash_flows = [cf * phase_probability for cf in cash_flows]
+            pipeline_cash_flows.extend(risk_adjusted_cash_flows)
 
         valuation_results = calculate_fair_market_values(
             stock_data=stock_data,
@@ -172,12 +267,14 @@ def main():
         st.write(f"Current Price per Share: ${valuation_results['current_price_per_share']:,.2f}")
         st.write(f"Projected Price per Share: ${valuation_results['projected_price_per_share']:,.2f}")
         st.write(f"NPV of Pipeline: ${valuation_results['npv_pipeline']:,.2f}")
-
-        # Revenue graph
+        # Prepare data for revenue graph
         years = list(range(1, len(pipeline_cash_flows) + 1))
         revenue_data = pd.DataFrame({"Year": years, "Revenue": pipeline_cash_flows})
+
+        # Display revenue graph
         st.subheader("Revenue Projection Over Time")
         st.line_chart(revenue_data.set_index("Year"))
+
 # Add a "Buy Me a Coffee" button
     st.markdown(
         """
