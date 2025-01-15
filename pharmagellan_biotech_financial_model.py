@@ -267,7 +267,6 @@ def main():
         st.write(f"Current Price per Share: ${valuation_results['current_price_per_share']:,.2f}")
         st.write(f"Projected Price per Share: ${valuation_results['projected_price_per_share']:,.2f}")
         st.write(f"NPV of Pipeline: ${valuation_results['npv_pipeline']:,.2f}")
-
 # Add a "Buy Me a Coffee" button
     st.markdown(
         """
