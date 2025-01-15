@@ -267,13 +267,16 @@ def main():
         st.write(f"Current Price per Share: ${valuation_results['current_price_per_share']:,.2f}")
         st.write(f"Projected Price per Share: ${valuation_results['projected_price_per_share']:,.2f}")
         st.write(f"NPV of Pipeline: ${valuation_results['npv_pipeline']:,.2f}")
-        # Prepare data for revenue graph
-        years = list(range(1, len(pipeline_cash_flows) + 1))
-        revenue_data = pd.DataFrame({"Year": years, "Revenue": pipeline_cash_flows})
+                # Ensure pipeline_cash_flows is not empty before preparing the graph
+        if pipeline_cash_flows:
+            years = list(range(1, len(pipeline_cash_flows) + 1))
+            revenue_data = pd.DataFrame({"Year": years, "Revenue": pipeline_cash_flows})
 
-        # Display revenue graph
-        st.subheader("Revenue Projection Over Time")
-        st.line_chart(revenue_data.set_index("Year"))
+            # Display revenue graph
+            st.subheader("Revenue Projection Over Time")
+            st.line_chart(revenue_data.set_index("Year"))
+        else:
+            st.warning("No revenue data available to display the graph.")
 
 # Add a "Buy Me a Coffee" button
     st.markdown(
